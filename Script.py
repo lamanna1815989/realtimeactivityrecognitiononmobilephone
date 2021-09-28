@@ -224,7 +224,7 @@ async def training(socketid):
 
              
 async def main():
-    await sio.connect('https://192.168.1.105:3000' + '?data=pythonclient')
+    await sio.connect('https://IP:PORT' + '?data=pythonclient')
     t = Thread(target=basic_consumer_loop_NewThread, args=())
     t.start()
     t2 = Thread(target= prediction_loop_NewThread, args=())

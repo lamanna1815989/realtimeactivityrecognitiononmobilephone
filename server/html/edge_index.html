@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Human Activity Recognition</title>  
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <!-- CSS only -->
+</head>
+<body>
+  <h15 style="font-weight:bold"> Sensor data: : </h15>
+  <br>
+  <h15 style="font-weight:bold"> Giroscopio: </h15>
+  <br>
+  <h15> x:</h15>
+  <h15 id="gy_xx"> cord </h15>
+  <br>
+  <h15> y:</h15>
+  <h15 id="gy_yy"> cord </h15>
+  <br>
+  <h15> z:</h15>
+  <h15 id="gy_zz"> cord </h15>
+  <br>
+  <h15 style="font-weight:bold"> Accelerometro: </h15>
+  <br>
+  <h15> x:</h15>
+  <h15 id="a_xx"> cord </h15>
+  <br>
+  <h15> y:</h15>
+  <h15 id="a_yy"> cord </h15>
+  <br>
+  <h15> z:</h15>
+  <h15 id="a_zz"> cord </h15>
+
+  <br>
+  <Br> 
+    
+  <h15> Attività svolta : </h15>
+  <h15 id="activity"> waiting for data... </h15>
+
+  <script src="/socket.io/socket.io.js"></script>
+<script> 
+ //Attraverso il socket id, facciamo sapere al server che attività questo client vuole svolgere
+ var socket = io('https://192.168.1.105:3000?data=' + 'predict_activity');
+
+ //check sensor on device
+ if ( ('Accelerometer' in window) && ('Gyroscope' in window)) {
+   console.log('ACC e GY ok')
+
+   let las = new Accelerometer({frequency: 20});
+   let gy = new Gyroscope({frequency: 20});
+
+   //function exectued at each detection
+   //ad ogni nuova misurazione emette i dati
+   las.addEventListener('reading', function(acc) {
+     //ad ogni evento dell'accelerometro, vogliamo effettuare una 
+     //sola misurazione con il giroscopio, e inviare 
+
+     gy.addEventListener('reading',  function(gya) {
+       a_xx.innerHTML=acc.target.x;
+       a_yy.innerHTML=acc.target.y;
+       a_zz.innerHTML=acc.target.z;
+       gy_xx.innerHTML=gya.target.x;
+       gy_yy.innerHTML=gya.target.y;
+       gy_zz.innerHTML=gya.target.z;
+        let payload = {
+          a_timestamp: acc.target.timestamp,
+          a_x :acc.target.x,
+          a_y: acc.target.y,
+          a_z: acc.target.z,
+          gy_timestamp: gya.target.timestamp,
+          gy_x :gya.target.x,
+          gy_y: gya.target.y,
+          gy_z: gya.target.z
+        }
+     socket.emit('accelerometer_gyroscope_client', payload);
+            
+     } ,{once:true});
+      
+     }
+   );
+   //start the sensor
+   las.start();
+   gy.start();
+ }
+  
+socket.on('predicted_activity', (msg)=>{
+  activity.innerHTML=msg.result;
+})
+
+
+</script>
+
+
+</body>
+</html>

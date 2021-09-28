@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Train Model</title>  
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <!-- CSS only -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+</head>
+<body>
+  <h1>Benvenuto, per allenare il modello devi svolgere tutte e 3 le attività da predirre per un tempo minimo di 5 minuti
+    in modo da ottenere almeno 6000 misurazioni, una volta che avrai raggiunto un numero di misurazioni sufficiente
+    il colore dell'attività diverrà verde.
+  </h1>
+  <h15 style="font-weight:bold"> Giroscopio : </h15>
+  <br>
+  <h15> x:</h15>
+  <h15 id="gy_xx"> cord </h15>
+  <br>
+  <h15> y:</h15>
+  <h15 id="gy_yy"> cord </h15>
+  <br>
+  <h15> z:</h15>
+  <h15 id="gy_zz"> cord </h15>
+  <br>
+  <h15 style="font-weight:bold"> Accelerometro : </h15>
+  <br>
+  <h15> x:</h15>
+  <h15 id="a_xx"> cord </h15>
+  <br>
+  <h15> y:</h15>
+  <h15 id="a_yy"> cord </h15>
+  <br>
+  <h15> z:</h15>
+  <h15 id="a_zz"> cord </h15>
+  <br>
+  <br>
+  <h1>Scegli l' attività che vuoi fare: </h1>
+  <button class ='walking' onclick="raccogli_attivita('Walking')">Camminata</button>
+
+  <button class ='running' onclick="raccogli_attivita('Running')">Corsa</button>
+
+  <button class ='still' onclick="raccogli_attivita('Still')">Still</button>
+
+  <button class ='stopp' onclick="stop()">Stop</button>
+
+  <button class ='allena' onclick="allena()">Allena</button>
+  <br>
+  <br>
+  <h15 id="req_res"></h15>
+
+  <script src="/socket.io/socket.io.js"></script>
+<script> 
+ 
+ //Attraverso il socket id, facciamo sapere al server che questo client invierà dati per il training
+  var socket = io('https://192.168.1.105:3000?data=' + 'training');
+
+ let las = new Accelerometer({frequency: 20});
+ let gy = new Gyroscope({frequency: 20});
+ let buttonwa = document.querySelector(".walking");
+ let buttonru = document.querySelector(".running");
+ let buttonst = document.querySelector(".still");
+ let buttonstop = document.querySelector(".stopp");
+ let buttonallena = document.querySelector(".allena");
+
+
+
+ if ( ('Accelerometer' in window) && ('Gyroscope' in window)) {
+
+ buttonallena.disabled=true;
+ buttonstop.disabled=true;
+
+currentactivity='Nothing'
+
+   las.addEventListener('reading', function(acc) {
+     //ad ogni evento dell'accelerometro, vogliamo effettuare una 
+     //sola misurazione con il giroscopio, e inviare i dati
+
+     gy.addEventListener('reading',  function(gya) {
+       a_xx.innerHTML=acc.target.x;
+       a_yy.innerHTML=acc.target.y;
+       a_zz.innerHTML=acc.target.z;
+       gy_xx.innerHTML=gya.target.x;
+       gy_yy.innerHTML=gya.target.y;
+       gy_zz.innerHTML=gya.target.z;
+        let payload = {
+          activity : currentactivity,
+          a_timestamp: acc.target.timestamp,
+          a_x :acc.target.x,
+          a_y: acc.target.y,
+          a_z: acc.target.z,
+          gy_timestamp: gya.target.timestamp,
+          gy_x :gya.target.x,
+          gy_y: gya.target.y,
+          gy_z: gya.target.z
+        }
+     socket.emit('accelerometer_gyroscope_client_training', payload);
+            
+     } ,{once:true});
+      
+     }
+   );
+gy.start();
+ }
+  
+function raccogli_attivita(attivita){
+  buttonwa.disabled=true;
+  buttonru.disabled=true;
+  buttonst.disabled=true;
+  buttonstop.disabled=false;
+  buttonallena.disabled=true;
+
+  currentactivity=attivita;
+  las.start()
+
+}
+
+function stop(){
+las.stop()
+buttonwa.disabled=false;
+  buttonru.disabled=false;
+  buttonst.disabled=false;
+  buttonstop.disabled=true;
+  buttonallena.disabled=false;
+}
+
+function allena(){
+  socket.emit('training_request');
+  req_res.innerHTML = "Richiesta di allenamento inviata, attendi l'esito..."
+}
+socket.on('training_result', (msg)=>{
+  //if todo=predict activity fa, altrimenti non fa niente
+  req_res.innerHTML = msg.result;
+console.log(msg.result);
+})
+</script>
+
+
+</body>
+</html>

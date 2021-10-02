@@ -3,7 +3,6 @@ from datetime import datetime
 import socketio
 import asyncio
 import socketio
-import nest_asyncio
 from threading import Thread
 from confluent_kafka import Consumer, Producer
 from confluent_kafka import KafkaError, KafkaException

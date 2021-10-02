@@ -21,7 +21,7 @@ from sklearn.preprocessing import MinMaxScaler
 import shutup;
 shutup.please()
 
-model = tf.keras.models.load_model('saved_model/my_model')
+model = tf.keras.models.load_model('/my_model')
 print('model loaded')
 sio = socketio.AsyncClient(ssl_verify=False)
 topics = ['sensor_data']

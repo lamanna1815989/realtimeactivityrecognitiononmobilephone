@@ -1,1 +1,11 @@
-aaa
+scikit-learn
+socketio
+asyncio
+confluent-kafka
+pandas
+numpy
+scipy
+matplotlib
+tensorflow
+shutup
+mlxtend
